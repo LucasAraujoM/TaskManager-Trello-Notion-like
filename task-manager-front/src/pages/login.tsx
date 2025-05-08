@@ -29,12 +29,11 @@ export default function LoginPage(){
     const onSubmit = async (data: LoginSchema) => {
         try{
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, data);
-            console.log(response);
 
             const token = response.data.access_token;
 
             localStorage.setItem("token", token);
-            router.push("/login");
+            router.push("/dashboard");
         } catch (error: any) {
             setErrorMsg(error.response.data.message || "Invalid email or password");
         }

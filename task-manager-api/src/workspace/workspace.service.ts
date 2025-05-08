@@ -9,7 +9,7 @@ export class WorkspaceService {
     async getAllWorkspaces() {
         const workspaces = await this.prisma.workspace.findMany();
         if (!workspaces) {
-            throw new NotFoundException('Workspaces not found');
+            return [];
         }
         return workspaces;
     }
@@ -20,7 +20,7 @@ export class WorkspaceService {
             },
         });
         if (!workspace) {
-            throw new NotFoundException('Workspace not found');
+            return [];
         }
         return workspace;
     }

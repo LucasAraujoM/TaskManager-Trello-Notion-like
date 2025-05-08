@@ -23,34 +23,41 @@ export class AuthService {
     if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials');
     }
-    return user;
+    const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload);
+    
+    // Update user with new token
+    await this.prisma.user.update({
+        where: { id: user.id },
+        data: { access_token }
+    });
+
+    return { ...user, access_token };
    }
 
    async register(body: RegisterDto) {
     const hashedPassword = await bcrypt.hash(body.password, 10);
     try {
+        const payload = { email: body.email };
+        const access_token = await this.jwtService.signAsync(payload);
+
         const user = await this.prisma.user.create({
             data: {
                 email: body.email,
                 password: hashedPassword,
                 name: body.name,
+                access_token,
             },
         });
-        const payload = { sub: user.id, email: user.email};
-        const token = await this.jwtService.sign(payload);
 
-        user.access_token = token;
-        await this.prisma.user.update({
-            where: { id: user.id },
-            data: { access_token: token },
-        });
-        return user;
+        return { ...user, access_token };
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 throw new UnauthorizedException('Email already exists');
             }
         }
+        throw error;
     }
    }
 
